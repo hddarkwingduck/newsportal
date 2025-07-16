@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+        {% block content %}
+        <h2>Editor Dashboard</h2>
+        <h3>Articles Needing Approval</h3>
+        <ul>
+        {% for article in articles %}
+        <li>
+        <strong>{{ article.title }}</strong> by {{ article.journalist }}
+        <form style="display:inline;" method="post" action="{% url 'approve_article' article.id %}">
+        {% csrf_token %}
+        <button type="submit">Approve</button>
+        </form>
+        </li>
+        {% empty %}
+        <li>No articles awaiting approval.</li>
+        {% endfor %}
+        </ul>
+        {% endblock %}
+    </title>
+</head>
+<body>
+
+</body>
+</html>

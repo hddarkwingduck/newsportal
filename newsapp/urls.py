@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import (home, ArticleListView, JournalistListView,
-                    PublisherListView, approve_article, article_list,
-                    SignUpView, signup, profile)
+from .views import (
+    home, article_list, signup, profile, ArticleListView,
+    JournalistListView, PublisherListView, approve_article,
+    editor_dashboard, journalist_dashboard, subscriptions,
+)
 
 urlpatterns = [
     path('', home, name='home'),
@@ -12,4 +14,7 @@ urlpatterns = [
     path('api/journalists/', JournalistListView.as_view(), name='journalist_list'),
     path('api/publishers/', PublisherListView.as_view(), name='publisher_list'),
     path('approve_article/<int:article_id>/', approve_article, name='approve_article'),
+    path('editor_dashboard/', editor_dashboard, name='editor_dashboard'),
+    path('journalist_dashboard/', journalist_dashboard, name='journalist_dashboard'),
+    path('subscriptions/', subscriptions, name='subscriptions'),
 ]

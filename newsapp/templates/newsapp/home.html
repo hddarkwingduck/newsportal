@@ -1,6 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% if user.is_authenticated %}
+<h1>Welcome, {{ user.username }}!</h1>
+<p>
+    {% if user.role == 'editor' %}
+    As an <strong>Editor</strong>, you can <a href="{% url 'editor_dashboard' %}">review and approve articles</a>.
+    {% elif user.role == 'journalist' %}
+    As a <strong>Journalist</strong>, you can <a href="{% url 'journalist_dashboard' %}">manage your articles</a>.
+    {% elif user.role == 'reader' %}
+    As a <strong>Reader</strong>, you can <a href="{% url 'subscriptions' %}">manage your subscriptions</a>.
+    {% else %}
+    You are logged in, but your role is not recognized.
+    {% endif %}
+</p>
+{% else %}
 <h1>Welcome to the News Portal!</h1>
 <p>This is the home page.</p>
+<p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Register</a> to get started.</p>
+{% endif %}
 {% endblock %}

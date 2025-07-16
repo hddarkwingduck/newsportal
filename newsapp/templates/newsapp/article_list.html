@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Articles</h2>
+<h1>ARTICLES</h1>
 <ul>
     {% for article in articles %}
     <li>{{ article.title }}</li>
     {% empty %}
-    <li>No articles found.</li>
+    <li>No articles yet</li>
     {% endfor %}
 </ul>
 {% endblock %}
