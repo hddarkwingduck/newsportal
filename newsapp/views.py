@@ -9,6 +9,7 @@ from rest_framework import generics
 from .forms import ArticleForm
 from .forms import CustomUserCreationForm
 from .models import Article, Journalist, Publisher
+from .forms import PublisherForm
 from .serializers import JournalistSerializer, PublisherSerializer, \
     ArticleSerializer
 
@@ -406,3 +407,32 @@ def submit_article(request: HttpRequest) -> HttpResponse:
     return render(request,
                   'newsapp/submit_article.html',
                   {'form': form})
+
+def add_publisher(request: HttpRequest) -> HttpResponse:
+    """
+    Handles the addition of a new publisher through an HTTP request.
+    Processes the form submission when the HTTP method is POST, saves the
+    publisher if the form is valid, and redirects to the publisher list
+    page. For non-POST requests, displays an empty publisher form. Renders
+    the response using an HTML template and provides the form
+    as context data.
+
+    :param request: The HTTP request object containing all metadata and
+        user request data, such as POST payload for form submission.
+    :type request: HttpRequest
+    :return: The HTTP response object that either redirects to the
+        publisher list on successful form submission or renders the add
+        publisher template with a form.
+    :rtype: HttpResponse
+    """
+    if request.method == "POST":
+        form = PublisherForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('publisher_list')  # adjust as needed
+    else:
+        form = PublisherForm()
+    return render(
+        request,
+        "newsapp/add_publisher.html",
+        {'form': form})

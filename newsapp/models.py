@@ -30,11 +30,6 @@ class Publisher(models.Model):
         related_name='editor_publishers',
         blank=True
     )
-    journalists = models.ManyToManyField(
-        'Journalist',
-        related_name='journalist_publishers',
-        blank=True
-    )
 
     def __str__(self) -> str:
 
@@ -141,41 +136,42 @@ class CustomUser(AbstractUser):
 
 class Journalist(models.Model):
     """
-    Represents a journalist entity with a one-to-one relation
-    to a custom user.
+    Represents a journalist entity.
 
-    The `Journalist` model is used to associate a user with additional
-    information specific to a journalist. It extends the functionality
-    of the user model by providing extra attributes such as a biography.
-    It only allows users who have the role of 'journalist' to be
-    associated with this model.
+    The Journalist model is used to associate a user with additional
+    information specific to a journalist. It allows for associating
+    a journalist to multiple publishers and provides extra attributes
+    such as a biography.
 
-    :ivar user: A one-to-one relationship with the `CustomUser` model,
-                constrained to users with the role of 'journalist'.
-    :type user: models.OneToOneField
-
-    :ivar bio: A field for storing the journalist's biography text.
-               It is optional and can be left blank.
-    :type bio: models.TextField
+    :ivar user: Optional one-to-one relationship with the `CustomUser` model,
+                typically (but not strictly) with users with role 'journalist'.
+    :ivar publishers: Publishers this journalist writes for (many-to-many).
+    :ivar bio: Biography field for the journalist.
     """
-    user = models.OneToOneField(CustomUser,
-                                on_delete=models.CASCADE,
-                                limit_choices_to={'role': 'journalist'})
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'journalist'},
+        null=True, blank=True  # allow for flexibility, if you want
+    )
+    name = models.CharField(max_length=100)
+    publishers = models.ManyToManyField(Publisher, related_name='journalists', blank=True)
     bio = models.TextField(blank=True)
 
     def __str__(self):
         """
-        Provides a string representation of the object, returning the
-        username associated with the `user` attribute. This implementation
-        calls the `username` attribute from
-        the `user` object and ensures this is used as the string output
-        for the object.
+        Represents the string representation of an object. The
+        representation will prioritize the associated user's username if
+        available; otherwise, it will fallback to the object's name.
 
-        :return: The string representation of the object, which is
-            the username of the associated `user` object.
+        :return: The string representation of the object, which is the
+            user's username if the `user` attribute exists and is set,
+            or the `name` attribute otherwise.
         :rtype: str
         """
-        return self.user.username
+        if self.user:
+            return self.user.username
+        return self.name
 
 
 class Article(models.Model):
@@ -184,10 +180,9 @@ class Article(models.Model):
 
     The Article class defines the structure and attributes of an
     article within the system. It includes fields for storing the article's
-    title, content,
-    publisher, the journalist who created it, its approval status, and
-    the timestamp it was created. Articles are linked to a publisher
-    and journalist through foreign key relationships.
+    title, content, publisher, the journalist who created it, its approval
+    status, and the timestamp it was created. Articles are linked to
+    a publisher and journalist through foreign key relationships.
 
     :ivar title: The title of the article.
     :type title: models.CharField
@@ -205,8 +200,12 @@ class Article(models.Model):
     :type created_at: models.DateTimeField
     """
     title = models.CharField(max_length=255)
-    content = models.TextField()  # or 'body', not both unless needed
-    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)
+    content = models.TextField()
+    publisher = models.ForeignKey(
+        'Publisher',
+        on_delete=models.CASCADE,
+        related_name='articles'
+    )
     journalist = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

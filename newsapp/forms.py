@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
 from .models import Article
+from .models import Publisher
+
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -39,3 +41,23 @@ class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
         fields = ['title', 'content', 'publisher']
+
+
+class PublisherForm(forms.ModelForm):
+    """
+    Represents a form for creating or updating a Publisher instance.
+
+    This form is built for the Publisher model and includes fields
+    to validate and process data related to a Publisher instance.
+    It ensures that only the specified fields are exposed for
+    form manipulation.
+
+    :ivar Meta.model: Specifies the associated model, which is Publisher.
+    :type Meta.model: Type[Publisher]
+    :ivar Meta.fields: List of fields in the Publisher model included
+        in the form.
+    :type Meta.fields: list[str]
+    """
+    class Meta:
+        model = Publisher
+        fields = ['name']

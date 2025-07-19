@@ -3,7 +3,7 @@ from .views import (
     home, article_list, signup, profile, ArticleListView,
     JournalistListView, PublisherListView, approve_article,
     editor_dashboard, journalist_dashboard, subscriptions,
-    submit_article,
+    submit_article, add_publisher,
 )
 
 urlpatterns = [
@@ -21,4 +21,5 @@ urlpatterns = [
     path('journalist_dashboard/', journalist_dashboard, name='journalist_dashboard'),
     path('subscriptions/', subscriptions, name='subscriptions'),
     path('articles/submit/', submit_article, name='submit_article'),
+    path('publishers/add/', add_publisher, name='add_publisher'),
 ]
