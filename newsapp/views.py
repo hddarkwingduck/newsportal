@@ -51,9 +51,8 @@ def editor_dashboard(request):
 @login_required
 @user_passes_test(is_journalist)
 def journalist_dashboard(request):
-    # Only show approved articles authored by this journalist
-    articles = request.user.published_articles.filter(approved=True)
-    has_unapproved_articles = request.user.published_articles.filter(approved=False).exists()
+    articles = request.user.journalist_articles.filter(approved=True)
+    has_unapproved_articles = request.user.journalist_articles.filter(approved=False).exists()
     return render(request, 'newsapp/journalist_dashboard.html', {
         'articles': articles,
         'has_unapproved_articles': has_unapproved_articles

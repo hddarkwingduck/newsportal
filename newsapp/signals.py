@@ -9,7 +9,7 @@ from .models import Article, CustomUser
 def notify_on_approval(sender, instance, created, **kwargs):
     if instance.approved:
         publisher_subs = instance.publisher.subscribed_readers.all()
-        journalist_subs = instance.journalist.user.subscribed_readers.all()
+        journalist_subs = instance.journalist.subscribed_readers.all()
         recipients = set([u.email for u in publisher_subs] + [u.email for u in journalist_subs])
         if recipients:
             send_mail(

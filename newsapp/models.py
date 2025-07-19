@@ -27,28 +27,32 @@ class CustomUser(AbstractUser):
         ('journalist', 'Journalist'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    subscriptions_publishers = models.ManyToManyField('Publisher', blank=True, related_name='subscribed_readers')
-    subscriptions_journalists = models.ManyToManyField('Journalist', blank=True, related_name='subscribed_readers')
-    published_articles = models.ManyToManyField('Article', blank=True, related_name='journalist_articles')
+    subscriptions_publishers = models.ManyToManyField(
+        'Publisher', blank=True, related_name='subscribed_readers'
+    )
+    subscriptions_journalists = models.ManyToManyField(
+        'self',
+        blank=True,
+        related_name='subscribed_readers',
+        symmetrical=False,
+        limit_choices_to={'role': 'journalist'}
+    )
     published_newsletters = models.TextField(blank=True, null=True)
+    bio = models.TextField(blank=True)  # if you want journalists to have bios
 
     def save(self, *args, **kwargs):
-        # Mutual exclusivity logic
-        super().save(*args, **kwargs)  # Save first to ensure self.id exists
-
+        super().save(*args, **kwargs)
         if self.role == 'journalist':
             self.subscriptions_publishers.clear()
             self.subscriptions_journalists.clear()
         elif self.role == 'reader':
-            self.published_articles.clear()
             self.published_newsletters = None
-
-        # --- Group assignment logic ---
         if self.role:
-            group_name = self.role.capitalize()  # "reader" -> "Reader"
+            group_name = self.role.capitalize()
             group, created = Group.objects.get_or_create(name=group_name)
-            self.groups.clear()  # Remove from all groups
+            self.groups.clear()
             self.groups.add(group)
+
 
 
 class Journalist(models.Model):
@@ -62,8 +66,7 @@ class Journalist(models.Model):
 
 class Article(models.Model):
     title = models.CharField(max_length=255)
-    content = models.TextField()
-    body = models.TextField()
+    content = models.TextField()  # or 'body', not both unless needed
     publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)
     journalist = models.ForeignKey(
         settings.AUTH_USER_MODEL,
