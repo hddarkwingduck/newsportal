@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Journalist Dashboard</h1>
+
+{% if has_unapproved_articles %}
+<p style="color: orange; font-weight: bold;">
+    You have submitted article(s) pending editor approval. Your article(s) will appear here once approved.
+</p>
+{% endif %}
+
+{% if articles %}
+<ul>
+    {% for article in articles %}
+    <li>
+        <strong>{{ article.title }}</strong>
+        {% if article.created_at %}
+        <small>(Published {{ article.created_at|date:"Y-m-d" }})</small>
+        {% endif %}
+        <span style="color:green;">[Approved]</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+{% if has_unapproved_articles %}
+<!-- handled by notice above -->
+{% else %}
+<p>You haven't published any articles yet.</p>
+{% endif %}
+{% endif %}
+
+<a href="{% url 'submit_article' %}">Submit New Article</a>
+
+{% endblock %}

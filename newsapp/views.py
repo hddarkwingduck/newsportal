@@ -1,11 +1,11 @@
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from rest_framework import generics
-from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
 
+from .forms import ArticleForm
 from .forms import CustomUserCreationForm
 from .models import Article, Journalist, Publisher
 from .serializers import JournalistSerializer, PublisherSerializer, \
@@ -51,9 +51,13 @@ def editor_dashboard(request):
 @login_required
 @user_passes_test(is_journalist)
 def journalist_dashboard(request):
-    # Show all articles by this journalist
-    articles = request.user.published_articles.all()
-    return render(request, 'newsapp/journalist_dashboard.html', {'articles': articles})
+    # Only show approved articles authored by this journalist
+    articles = request.user.published_articles.filter(approved=True)
+    has_unapproved_articles = request.user.published_articles.filter(approved=False).exists()
+    return render(request, 'newsapp/journalist_dashboard.html', {
+        'articles': articles,
+        'has_unapproved_articles': has_unapproved_articles
+    })
 
 @login_required
 @user_passes_test(is_reader)
@@ -130,3 +134,19 @@ class SignUpView(CreateView):
     form_class = UserCreationForm
     success_url = reverse_lazy('login')
     template_name = 'registration/signup.html'
+
+@login_required
+@user_passes_test(is_journalist)
+def submit_article(request):
+    if request.method == 'POST':
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.journalist = request.user
+            article.save()
+            return redirect('journalist_dashboard')
+    else:
+        form = ArticleForm()
+    return render(request,
+                  'newsapp/submit_article.html',
+                  {'form': form})

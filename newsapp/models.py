@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
 
 class Publisher(models.Model):
@@ -51,17 +52,24 @@ class CustomUser(AbstractUser):
 
 
 class Journalist(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'journalist'})
+    user = models.OneToOneField(CustomUser,
+                                on_delete=models.CASCADE,
+                                limit_choices_to={'role': 'journalist'})
     bio = models.TextField(blank=True)
 
     def __str__(self):
         return self.user.username
 
 class Article(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
     body = models.TextField()
     publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)
-    journalist = models.ForeignKey(Journalist, on_delete=models.CASCADE)
+    journalist = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='journalist_articles'
+    )
     approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
