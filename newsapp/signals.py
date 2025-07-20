@@ -30,7 +30,7 @@ def notify_on_approval(sender, instance, created, **kwargs):
         if recipients:
             send_mail(
                 subject=f"New Article Approved: {instance.title}",
-                message=instance.body,
+                message=instance.content,
                 from_email='no-reply@newsportal.com',
                 recipient_list=list(recipients),
             )
