@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django migrations
+*/migrations/
+!*/migrations/__init__.py
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# VS Code & PyCharm project files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database & media
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# Environment variables/secrets
+.env
+.env.*
+*.env
+
+# Python egg info
+*.egg-info/
+dist/
+build/
+
+# Log files
+*.log
+
+# Test & coverage
+htmlcov/
+.coverage

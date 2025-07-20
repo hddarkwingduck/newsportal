@@ -10,6 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
+
+# X (Twitter) API credentials loaded from environment variables
+X_BEARER_TOKEN = os.environ.get('X_BEARER_TOKEN', '')
+X_API_KEY = os.environ.get('X_API_KEY', '')
+X_API_SECRET = os.environ.get('X_API_SECRET', '')
+
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
