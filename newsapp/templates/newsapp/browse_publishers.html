@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+        {% block content %}
+        <h2>All Publishers</h2>
+        <ul>
+        {% for pub in publishers %}
+        <li>
+        {{ pub.name }}
+        {% if pub in user_subs %}
+        <a href="{% url 'unsubscribe_publisher' pub.pk %}">Unsubscribe</a>
+        {% else %}
+        <a href="{% url 'subscribe_publisher' pub.pk %}">Subscribe</a>
+        {% endif %}
+        </li>
+        {% endfor %}
+        </ul>
+        {% endblock %}
+    </title>
+</head>
+<body>
+
+</body>
+</html>

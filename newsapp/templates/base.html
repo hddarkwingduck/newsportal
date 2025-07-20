@@ -15,6 +15,8 @@
   <a href="{% url 'journalist_dashboard' %}">Journalist Dashboard</a>
   {% elif user.role == 'reader' %}
   <a href="{% url 'subscriptions' %}">My Subscriptions</a>
+  <a href="{% url 'browse_publishers' %}">Browse Publishers</a>
+  <a href="{% url 'browse_journalists' %}">Browse Journalists</a>
   {% endif %}
   <form method="post" action="{% url 'logout' %}" style="display:inline;">
     {% csrf_token %}

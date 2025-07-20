@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.db.models import QuerySet
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
@@ -436,3 +436,140 @@ def add_publisher(request: HttpRequest) -> HttpResponse:
         request,
         "newsapp/add_publisher.html",
         {'form': form})
+
+@login_required
+def browse_publishers(request: HttpRequest) -> HttpResponse:
+    """
+    Retrieve and render the list of publishers and current user's
+    subscribed publishers within a template.
+
+    :param request: An HTTP request object that represents the client's
+        request to the server. This includes information about the user,
+        session, and data sent via GET/POST methods.
+    :type request: HttpRequest
+    :return: An HTTP response object that renders the
+        'browse_publishers.html' template, passing the publishers and
+        the user's subscriptions as context.
+    :rtype: HttpResponse
+    """
+    publishers = Publisher.objects.all()
+    user_subs = request.user.subscriptions_publishers.all()
+    return render(
+        request, 'newsapp/browse_publishers.html', {
+        'publishers': publishers,
+        'user_subs': user_subs
+    })
+
+
+@login_required
+def browse_journalists(request: HttpRequest) -> HttpResponse:
+    """
+    Browse a list of journalists and display them on the "browse
+    journalists" page. This function retrieves all available journalists
+    from the database and also fetches the logged-in user's
+    journalist subscriptions. These are then rendered on the specified
+    HTML template.
+
+    :param request: The HTTP request object containing metadata
+        about the request.
+    :type request: HttpRequest
+    :return: An HTTP response object containing the rendered "browse
+        journalists" HTML template.
+    :rtype: HttpResponse
+    """
+    journalists = Journalist.objects.all()
+    user_subs = request.user.subscriptions_journalists.all()
+    return render(
+        request, 'newsapp/browse_journalists.html', {
+        'journalists': journalists,
+        'user_subs': user_subs
+    })
+
+
+@login_required
+def subscribe_publisher(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Handles the user subscription to a specific publisher.
+    If the publisher with the given primary key exists, it adds the
+    publisher to the user's subscriptions and
+    redirects the user back to the publisher browsing page.
+
+    :param request: The HTTP request object containing metadata
+        about the request. The user information is also accessible through
+        this object.
+    :param pk: The primary key of the publisher to which the user wants
+        to subscribe.
+    :return: An HTTP response that redirects the user to the publisher
+        browsing page.
+    """
+    publisher = get_object_or_404(Publisher, pk=pk)
+    request.user.subscriptions_publishers.add(publisher)
+    return redirect('browse_publishers')
+
+
+@login_required
+def unsubscribe_publisher(request: HttpRequest,
+                          pk: int) -> HttpResponseRedirect:
+    """
+    Unsubscribes the current user from a specific publisher.
+
+    This view function is used to allow authenticated users to unsubscribe
+    from a publisher they were previously subscribed to. Upon successful
+    completion, the user is redirected to the publisher browsing page.
+
+    :param request: HttpRequest object required for handling HTTP requests.
+    :param pk: Primary key (ID) of the publisher to unsubscribe from.
+    :return: HttpResponseRedirect to the 'browse_publishers' view.
+    """
+    publisher = get_object_or_404(Publisher, pk=pk)
+    request.user.subscriptions_publishers.remove(publisher)
+    return redirect('browse_publishers')
+
+
+@login_required
+def subscribe_journalist(request: HttpRequest,
+                         pk: int) -> HttpResponseRedirect:
+    """
+    Handles the subscription of the currently logged-in user to a specific
+    journalist. This function retrieves the journalist by the provided
+    primary key (pk) and adds the
+    journalist's user to the subscriptions of the currently logged-in user.
+    Upon successful subscription, it redirects the user to the view for
+    browsing journalists.
+
+    :param request: The HTTP request object that represents the current
+        user request.
+    :type request: HttpRequest
+    :param pk: The primary key of the journalist to subscribe to.
+    :type pk: int
+    :return: An HTTP redirect response to the "browse_journalists" page.
+    :rtype: HttpResponseRedirect
+    """
+    journalist = get_object_or_404(Journalist, pk=pk)
+    request.user.subscriptions_journalists.add(journalist.user)
+    return redirect('browse_journalists')
+
+
+@login_required
+def unsubscribe_journalist(request: HttpRequest,
+                           pk: int) -> HttpResponseRedirect:
+    """
+    Handle the unsubscription of a journalist by the logged-in user.
+
+    This view is designed to allow a user to unsubscribe from a
+    journalist by removing the journalist's user object from the current
+    user's subscription
+    list. Upon successful unsubscription, the user is redirected to the
+    'browse_journalists' view.
+
+    :param request: The HTTP request object containing user information.
+    :type request: HttpRequest
+    :param pk: The primary key of the journalist that the user wishes to
+        unsubscribe from.
+    :type pk: int
+    :return: An HTTP redirect response to the 'browse_journalists' view.
+    :rtype: HttpResponseRedirect
+    """
+    journalist = get_object_or_404(Journalist, pk=pk)
+    request.user.subscriptions_journalists.remove(journalist.user)
+    return redirect('browse_journalists')

@@ -3,7 +3,9 @@ from .views import (
     home, article_list, signup, profile, ArticleListView,
     JournalistListView, PublisherListView, approve_article,
     editor_dashboard, journalist_dashboard, subscriptions,
-    submit_article, add_publisher,
+    submit_article, add_publisher, browse_publishers, browse_journalists,
+    subscribe_publisher, unsubscribe_publisher, subscribe_journalist,
+    unsubscribe_journalist,
 )
 
 urlpatterns = [
@@ -22,4 +24,10 @@ urlpatterns = [
     path('subscriptions/', subscriptions, name='subscriptions'),
     path('articles/submit/', submit_article, name='submit_article'),
     path('publishers/add/', add_publisher, name='add_publisher'),
+    path('browse_publishers/', browse_publishers, name='browse_publishers'),
+    path('browse_journalists/', browse_journalists, name='browse_journalists'),
+    path('subscribe_publisher/<int:pk>/', subscribe_publisher, name='subscribe_publisher'),
+    path('unsubscribe_publisher/<int:pk>/', unsubscribe_publisher, name='unsubscribe_publisher'),
+    path('subscribe_journalist/<int:pk>/', subscribe_journalist, name='subscribe_journalist'),
+    path('unsubscribe_journalist/<int:pk>/', unsubscribe_journalist, name='unsubscribe_journalist'),
 ]

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+        {% block content %}
+        <h2>All Journalists</h2>
+        <ul>
+        {% for jour in journalists %}
+        <li>
+        {{ jour.name }}
+        {% if jour.user in user_subs %}
+        <a href="{% url 'unsubscribe_journalist' jour.pk %}">Unsubscribe</a>
+        {% else %}
+        <a href="{% url 'subscribe_journalist' jour.pk %}">Subscribe</a>
+        {% endif %}
+        </li>
+        {% endfor %}
+        </ul>
+        {% endblock %}
+    </title>
+</head>
+<body>
+
+</body>
+</html>

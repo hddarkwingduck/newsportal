@@ -2,7 +2,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group
-from .models import Article, CustomUser
+from .models import Article, CustomUser, Journalist
+
 
 @receiver(post_save, sender=Article)
 def notify_on_approval(sender, instance, created, **kwargs):
@@ -57,3 +58,28 @@ def assign_user_group(sender, instance, created, **kwargs):
         instance.groups.clear()
         instance.groups.add(group)
 
+@receiver(post_save, sender=CustomUser)
+def create_journalist_for_user(sender: type, instance: CustomUser,
+                               created: bool, **kwargs: any) -> None:
+    """
+    Signal handler that creates a `Journalist` instance for a `CustomUser`
+    when a new user with the role of "journalist" is saved.
+
+    If the `created` flag is `True` and the role of the saved instance is
+    `journalist`, this function will create a new `Journalist` instance
+    associated with the `CustomUser` object.
+
+    :param sender: The model class that sent the signal.
+    :type sender: type
+    :param instance: The actual instance being saved.
+    :type instance: CustomUser
+    :param created: A boolean indicating if a new record was created.
+    :type created: bool
+    :param kwargs: Additional keyword arguments provided by the signal.
+    :type kwargs: any
+    :return: None
+    :rtype: None
+    """
+    if created and instance.role == 'journalist':
+        # If a profile does not already exist, create one
+        Journalist.objects.create(user=instance, name=instance.username)
