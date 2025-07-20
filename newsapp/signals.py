@@ -1,3 +1,4 @@
+import requests
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
@@ -83,3 +84,45 @@ def create_journalist_for_user(sender: type, instance: CustomUser,
     if created and instance.role == 'journalist':
         # If a profile does not already exist, create one
         Journalist.objects.create(user=instance, name=instance.username)
+
+
+@receiver(post_save, sender=Article)
+def post_article_to_x(sender: type, instance: Article, created: bool,
+                      **kwargs: dict) -> None:
+    """
+    Signal receiver function triggered after saving an Article instance.
+    Its purpose is to post the approved article to X (formerly Twitter) by
+    sending a POST request using the API. The function ensures that only
+    newly approved articles are posted.
+    No return value is expected.
+
+    :param sender: The sender of the signal.
+    :type sender: type
+    :param instance: The instance of the Article model being saved.
+    :type instance: Article
+    :param created: Indicates whether the instance was created or updated.
+    :type created: bool
+    :param kwargs: Additional arguments passed to the signal receiver.
+    :type kwargs: dict
+    :return: None
+    """
+    # Only post if the article has just been approved
+    if instance.approved:
+        x_api_url = "https://api.twitter.com/2/tweets"
+        bearer_token = "YOUR_X_BEARER_TOKEN"  # Store securely in environment variables!
+
+        headers = {
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "text": f"{instance.title}\n\n{instance.content[:250]}..."  # Plaintext preview
+        }
+        try:
+            response = requests.post(x_api_url, headers=headers, json=data)
+            if response.status_code == 201 or response.status_code == 200:
+                print("Article posted to X successfully.")
+            else:
+                print(f"Failed to post to X: {response.status_code} {response.text}")
+        except Exception as e:
+            print(f"Could not post article to X: {e}")
