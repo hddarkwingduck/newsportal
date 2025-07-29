@@ -5,7 +5,9 @@ from .views import (
     editor_dashboard, journalist_dashboard, subscriptions,
     submit_article, add_publisher, browse_publishers, browse_journalists,
     subscribe_publisher, unsubscribe_publisher, subscribe_journalist,
-    unsubscribe_journalist,
+    unsubscribe_journalist, newsletter_list, newsletter_create,
+    newsletter_detail, newsletter_update, newsletter_delete,
+    approve_newsletter, create_publisher, assign_publisher, publisher_list,
 )
 
 urlpatterns = [
@@ -30,4 +32,13 @@ urlpatterns = [
     path('unsubscribe_publisher/<int:pk>/', unsubscribe_publisher, name='unsubscribe_publisher'),
     path('subscribe_journalist/<int:pk>/', subscribe_journalist, name='subscribe_journalist'),
     path('unsubscribe_journalist/<int:pk>/', unsubscribe_journalist, name='unsubscribe_journalist'),
+    path('newsletters/', newsletter_list, name='newsletter_list'),
+    path('newsletters/create/', newsletter_create, name='newsletter_create'),
+    path('newsletters/<int:pk>/', newsletter_detail, name='newsletter_detail'),
+    path('newsletters/<int:pk>/edit/', newsletter_update, name='newsletter_update'),
+    path('newsletters/<int:pk>/delete/', newsletter_delete, name='newsletter_delete'),
+    path('newsletters/<int:pk>/approve/', approve_newsletter, name='approve_newsletter'),
+    path('publishers/create/', create_publisher, name='create_publisher'),
+    path('assign_publisher/', assign_publisher, name='assign_publisher'),
+    path('publishers/', publisher_list, name='publisher_list'),
 ]

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+      {% block content %}
+      <h2>Approve Newsletter</h2>
+      <p>Approve "{{ newsletter.title }}"?</p>
+      <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success">Approve</button>
+      <a href="{% url 'newsletter_list' %}" class="btn btn-secondary">Cancel</a>
+      </form>
+      {% endblock %}
+    </title>
+</head>
+<body>
+
+</body>
+</html>

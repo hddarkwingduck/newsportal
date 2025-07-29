@@ -6,9 +6,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from rest_framework import generics
-from .forms import ArticleForm
+from .forms import ArticleForm, NewsletterForm, AssignPublisherForm
 from .forms import CustomUserCreationForm
-from .models import Article, Journalist, Publisher
+from .models import Article, Journalist, Publisher, Newsletter
 from .forms import PublisherForm
 from .serializers import JournalistSerializer, PublisherSerializer, \
     ArticleSerializer
@@ -573,3 +573,275 @@ def unsubscribe_journalist(request: HttpRequest,
     journalist = get_object_or_404(Journalist, pk=pk)
     request.user.subscriptions_journalists.remove(journalist.user)
     return redirect('browse_journalists')
+
+
+@login_required
+@user_passes_test(is_journalist)
+def newsletter_create(request: HttpRequest) -> HttpResponse:
+    """
+    Handles the creation of a new newsletter. Provides a form for
+    the user to input newsletter data and processes the form submission.
+    Upon successful validation
+    and saving, the newsletter is associated with the journalist and
+    their publisher.
+
+    :param request: The HttpRequest object representing the HTTP request
+        sent to the server.
+    :type request: HttpRequest
+
+    :return: An HTTP Response object. Depending on the method and state:
+        - If the form is successfully processed: A redirect response
+            to the newsletter list page.
+        - If the form is not submitted or contains errors: A rendered
+            response with the newsletter creation form.
+    :rtype: HttpResponse
+    """
+    if request.method == 'POST':
+        form = NewsletterForm(request.POST)
+        if form.is_valid():
+            newsletter = form.save(commit=False)
+            newsletter.journalist = request.user
+            # If multi-publisher supported, allow user to select
+            newsletter.publisher = request.user.journalist.publishers.first()
+            newsletter.save()
+            return redirect('newsletter_list')
+    else:
+        form = NewsletterForm()
+    return render(request,
+                  'newsapp/newsletter_form.html',
+                  {'form': form})
+
+
+@login_required
+def newsletter_update(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Handles the update of a newsletter instance if the user is authorized.
+    The user must be the journalist assigned to the newsletter or have
+    editor permissions. If the request method is POST and the form
+    provided is valid, the updated newsletter is saved. Otherwise, renders
+    a form for updating the newsletter.
+
+    :param request: The HTTP request object containing metadata and
+        request data.
+    :type request: HttpRequest
+    :param pk: Primary key of the newsletter to be updated.
+    :type pk: int
+    :return: HTTP response redirecting to the newsletter list or
+        rendering the newsletter update form.
+    :rtype: HttpResponse
+    """
+    newsletter = get_object_or_404(Newsletter, pk=pk)
+    if (request.user == newsletter.journalist) or is_editor(request.user):
+        if request.method == 'POST':
+            form = NewsletterForm(request.POST, instance=newsletter)
+            if form.is_valid():
+                form.save()
+                return redirect('newsletter_list')
+        else:
+            form = NewsletterForm(instance=newsletter)
+        return render(request,
+                      'newsapp/newsletter_form.html',
+                      {'form': form})
+    return redirect('newsletter_list')
+
+
+@login_required
+def newsletter_delete(request: HttpRequest, pk: int) -> HttpResponseRedirect:
+    """
+    Deletes a newsletter object identified by its primary key (pk) if the
+    requesting user is either the associated journalist or has editor
+    permissions. After successful deletion, redirects the user to the
+    newsletter list view.
+
+    :param request: The HTTP request object representing the current request.
+    :type request: HttpRequest
+    :param pk: The primary key of the newsletter to be deleted.
+    :type pk: int
+    :return: An HTTP response redirecting to the newsletter list view after
+        successful deletion.
+    :rtype: HttpResponseRedirect
+    """
+    newsletter = get_object_or_404(Newsletter, pk=pk)
+    if (request.user == newsletter.journalist) or is_editor(request.user):
+        newsletter.delete()
+    return redirect('newsletter_list')
+
+
+@login_required
+@user_passes_test(is_editor)
+def approve_newsletter(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Approves a newsletter entry based on its primary key.
+
+    This function handles the approval process of a newsletter.
+    It retrieves the specified newsletter object using its primary key. If
+    the request method is
+    POST, the newsletter is marked as approved, saved to the database,
+    and the user is redirected to the newsletter list page. Otherwise,
+    the `approve_newsletter`
+    template is rendered, displaying the newsletter details to the user.
+
+    :param request: The HTTP request object received from the client,
+        containing metadata about the request.
+    :type request: HttpRequest
+
+    :param pk: The primary key of the newsletter to be approved.
+    :type pk: int
+
+    :return: An HTTP response that either renders the approval template
+        or redirects to the newsletter list page if the approval is
+        completed successfully.
+    :rtype: HttpResponse
+    """
+    newsletter = get_object_or_404(Newsletter, pk=pk)
+    if request.method == 'POST':
+        newsletter.approved = True
+        newsletter.save()
+        return redirect('newsletter_list')
+    return render(request,
+                  'newsapp/approve_newsletter.html',
+                  {'newsletter': newsletter})
+
+
+@login_required
+def newsletter_list(request: HttpRequest) -> HttpResponse:
+    """
+    Fetches and displays a list of newsletters for the user based on
+    their role. The view is restricted to logged-in users. Editors and
+    journalists can access all newsletters,
+    while readers only see approved newsletters. Users without any of these
+    roles see no
+    newsletters.
+
+    :param request: The HTTP request object containing user session and
+    metadata.
+    :type request: HttpRequest
+    :return: An HTTP response with the rendered newsletter list page
+    containing the
+        appropriate newsletters for the user's role.
+    :rtype: HttpResponse
+    """
+    if is_editor(request.user) or is_journalist(request.user):
+        newsletters = Newsletter.objects.all()
+    elif is_reader(request.user):
+        newsletters = Newsletter.objects.filter(approved=True)
+    else:
+        newsletters = Newsletter.objects.none()
+    return render(request,
+                  'newsapp/newsletter_list.html',
+                  {'newsletters': newsletters})
+
+
+@login_required
+def newsletter_detail(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Retrieve details of a specific newsletter and render the detail
+    view if the user has the necessary permissions to access it. If the
+    permissions are not sufficient, redirect the user to the
+    newsletter list page.
+
+    :param request: The HTTP request object containing metadata about
+        the request and user session.
+    :type request: HttpRequest
+    :param pk: The primary key of the newsletter to be retrieved.
+    :type pk: int
+    :return: An HTTP response containing the rendered newsletter detail
+        view if the user has permission, or a redirection to the newsletter
+        list page if access is denied.
+    :rtype: HttpResponse
+    """
+    newsletter = get_object_or_404(Newsletter, pk=pk)
+    allowed = (newsletter.approved
+               or (request.user == newsletter.journalist)
+               or is_editor(request.user))
+    if allowed:
+        return render(request,
+                      'newsapp/newsletter_detail.html',
+                      {'newsletter': newsletter})
+    return redirect('newsletter_list')
+
+
+@login_required
+def create_publisher(request: HttpRequest) -> HttpResponse:
+    """
+    Handles the creation of a new publisher.
+    This view processes a POST request to save a publisher's data through a
+    form submission. If the request method is not POST,
+    renders the form for creating a publisher. Ensures the user is
+    logged in before access.
+
+    :param request: The HttpRequest object containing metadata
+        about the request.
+    :type request: HttpRequest
+    :return: HttpResponse object containing the rendered template
+        or redirects upon successful submission of the form.
+    :rtype: HttpResponse
+    """
+    if request.method == 'POST':
+        form = PublisherForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('publisher_list')  # or wherever you want to go
+    else:
+        form = PublisherForm()
+    return render(request,
+                  'newsapp/create_publisher.html',
+                  {'form': form})
+
+
+@login_required
+def assign_publisher(request: HttpRequest) -> HttpResponse:
+    """
+    Handles the process of assigning a publisher to the currently
+    logged-in user based on their role. The user must have the role of
+    either 'journalist' or 'editor' to perform this action.
+    The function processes both GET and POST requests, where POST requests
+    submit the publisher assignment form and GET requests
+    retrieve the form to be displayed. Based on the user's role,
+    the function updates their associated publisher information.
+
+    :param request: The HTTP request object containing information
+        about the client's request.
+    :type request: HttpRequest
+    :return: An HTTP response that either renders the assignment form
+        template, redirects to the home page upon a successful submission,
+        or redirects unauthorized users.
+    :rtype: HttpResponse
+    """
+    user = request.user
+    if user.role in ['journalist', 'editor']:
+        if request.method == 'POST':
+            form = AssignPublisherForm(request.POST)
+            if form.is_valid():
+                publisher = form.cleaned_data['publisher']
+                if user.role == 'journalist':
+                    user.journalist.publishers.set([publisher])  # ManyToMany
+                elif user.role == 'editor':
+                    user.editor_publishers.set([publisher])  # ManyToMany
+                return redirect('home')
+        else:
+            form = AssignPublisherForm()
+        return render(request,
+                      'newsapp/assign_publisher.html',
+                      {'form': form})
+    return redirect('home')
+
+
+@login_required
+def publisher_list(request: HttpRequest) -> HttpResponse:
+    """
+    Retrieves and displays a list of publishers.
+
+    This function retrieves all the publishers from the Publisher
+    model and renders them in the 'newsapp/publisher_list.html' template.
+    It requires the user to be authenticated to access this view.
+
+    :param request: The HTTP request object.
+    :type request: HttpRequest
+    :return: An HTTP response containing the rendered publisher list page.
+    :rtype: HttpResponse
+    """
+    publishers = Publisher.objects.all()
+    return render(request,
+                  'newsapp/publisher_list.html',
+                  {'publishers': publishers})

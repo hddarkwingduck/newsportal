@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+        {% block content %}
+        <h2>{{ newsletter.title }}</h2>
+        <p><strong>Publisher:</strong> {{ newsletter.publisher }}</p>
+        <p>{{ newsletter.content }}</p>
+        <p><em>By: {{ newsletter.journalist }}</em></p>
+        {% if newsletter.approved %}<span class="badge bg-success">Approved</span>{% endif %}
+        <a href="{% url 'newsletter_list' %}">Back to Newsletters</a>
+        {% endblock %}
+    </title>
+</head>
+<body>
+
+</body>
+</html>

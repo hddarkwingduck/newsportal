@@ -229,3 +229,47 @@ class Article(models.Model):
         :rtype: str
         """
         return self.title
+
+
+class Newsletter(models.Model):
+    """
+    Represents a newsletter that holds content and metadata.
+
+    This model is used to store information about newsletters
+    including the title, content, journalist, publisher, approval status,
+    and creation date.
+    Instances of this class represent individual newsletters with
+    metadata about their sources and status.
+
+    :ivar title: The title of the newsletter.
+    :type title: models.CharField
+    :ivar content: The main body/content of the newsletter.
+    :type content: models.TextField
+    :ivar journalist: The author of the newsletter. Links to the user model.
+    :type journalist: models.ForeignKey
+    :ivar publisher: The publisher of the newsletter.
+        Links to a Publisher model.
+    :type publisher: models.ForeignKey
+    :ivar approved: Status indicating whether the newsletter is
+        approved for use.
+    :type approved: models.BooleanField
+    :ivar created_at: The date and time when the newsletter was created.
+    :type created_at: models.DateTimeField
+    """
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    journalist = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='newsletters'
+    )
+    publisher = models.ForeignKey(
+        'Publisher',
+        on_delete=models.CASCADE,
+        related_name='newsletters'
+    )
+    approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

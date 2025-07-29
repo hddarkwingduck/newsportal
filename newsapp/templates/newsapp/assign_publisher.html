@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% extends 'base.html' %}
+      {% block content %}
+      <h2>Select Your Publisher</h2>
+      <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Assign Publisher</button>
+      </form>
+      {% endblock %}
+    </title>
+</head>
+<body>
+
+</body>
+</html>
